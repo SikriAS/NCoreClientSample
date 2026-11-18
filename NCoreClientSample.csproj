@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gecko.NCore.Client" Version="10.3.4" />
+    <PackageReference Include="Gecko.NCore.Client" Version="10.6.2" />
     <PackageReference Include="Gecko.NCore.Client.ChangeTracking.V1" Version="6.5.1" />
     <PackageReference Include="Gecko.NCore.Client.Documents.V2" Version="7.4.1" />
     <PackageReference Include="Gecko.NCore.Client.Functions.V2" Version="6.6.1" />
