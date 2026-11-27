@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Gecko.NCore.Client" Version="12.0.1" />
-    <PackageReference Include="Gecko.NCore.Client.ChangeTracking.V1" Version="6.5.1" />
+    <PackageReference Include="Gecko.NCore.Client.ChangeTracking.V1" Version="6.7.1" />
     <PackageReference Include="Gecko.NCore.Client.Documents.V2" Version="7.4.1" />
     <PackageReference Include="Gecko.NCore.Client.Functions.V2" Version="6.6.1" />
     <PackageReference Include="Gecko.NCore.Client.ObjectModel.V3.En" Version="7.36.0" />
