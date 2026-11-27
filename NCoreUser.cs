@@ -25,7 +25,7 @@ namespace NCoreClientSample
         }
         
 
-        private AdministrativEnhet _administrativEnhet = null;
+        private AdministrativEnhet? _administrativEnhet;
         public AdministrativEnhet HentAdministrativEnhet(IEphorteContext context)
         {
             if (_administrativEnhet != null) return _administrativEnhet;
@@ -33,7 +33,7 @@ namespace NCoreClientSample
             return _administrativEnhet;
         }
 
-        private Arkivdel _arkivdel = null;
+        private Arkivdel? _arkivdel;
         public Arkivdel HentArkivdel(IEphorteContext context)
         {
             if (_arkivdel != null) return _arkivdel;
@@ -41,7 +41,7 @@ namespace NCoreClientSample
             return _arkivdel;
         }
 
-        private JournalEnhet _journalEnhet = null;
+        private JournalEnhet? _journalEnhet;
         public JournalEnhet HentJournalEnhet(IEphorteContext context)
         {
             if (_journalEnhet != null) return _journalEnhet;
@@ -49,7 +49,7 @@ namespace NCoreClientSample
             return _journalEnhet;
         }
 
-        private PersonRolle _personrolle = null;
+        private PersonRolle? _personrolle;
         public PersonRolle HentPersonRolle(IEphorteContext context)
         {
             if (_personrolle != null) return _personrolle;
@@ -57,7 +57,7 @@ namespace NCoreClientSample
             return _personrolle;
         }
 
-        private Rolle _rolle = null;
+        private Rolle? _rolle;
         public Rolle HentRolle(IEphorteContext context)
         {
             if (_rolle != null) return _rolle;

@@ -83,15 +83,15 @@ namespace NCoreClientSample
 
         public static NCoreUser HentInfoOmBruker(IEphorteContext context, string brukernavn)
         {
-            Personnavn personnavn = null;
             try
             {
-                personnavn = HentPersonnavnForBruker(context, brukernavn);
+                var personnavn = HentPersonnavnForBruker(context, brukernavn);
+                if (personnavn.PersonId is not int personId) throw new Exception(string.Format("Personnavn for bruker {0} mangler PersonId!", brukernavn));
 
-                object functionResult = context.Functions.Execute("HentRolleHandler", new object[] { personnavn.PersonId }); //Input: peId
-                if (functionResult == null) throw new Exception(string.Format("Ingen personrolle definert for PersonId {0} i ePhorte!", personnavn.PersonId));
+                object functionResult = context.Functions.Execute("HentRolleHandler", new object[] { personId }); //Input: peId
+                if (functionResult == null) throw new Exception(string.Format("Ingen personrolle definert for PersonId {0} i ePhorte!", personId));
 
-                string[] personRolleRows = functionResult.ToString().Split(';');
+                string[] personRolleRows = (functionResult.ToString() ?? string.Empty).Split(';');
                 foreach (string personRolleRow in personRolleRows)
                 {
                     if (string.IsNullOrEmpty(personRolleRow)) throw new Exception(string.Format("Bruker {0} har ingen aktiv rolle!", brukernavn));
@@ -110,7 +110,7 @@ namespace NCoreClientSample
                     }
 
                 }
-                throw new Exception(string.Format("Feil i HentInfoOmBruker. Ingen standard rolle definert for PersonId {0}", personnavn != null ? personnavn.PersonId.Value.ToString() : "<ingen personid>"));
+                throw new Exception(string.Format("Feil i HentInfoOmBruker. Ingen standard rolle definert for PersonId {0}", personId));
             }
             catch (Exception ex)
             {
@@ -147,7 +147,7 @@ namespace NCoreClientSample
                 var personAdresse = context.Query<PersonAdresse>().Include(pa => pa.Person).Include(pa => pa.Person.AktivtNavn).Include(pa => pa.Adresse)
                                     .Where(pa => pa.Adresse.EPostAdresse == epostAdr).FirstOrDefault();
 
-                return personAdresse?.Person;
+                return personAdresse?.Person ?? throw new Exception(string.Format("Ingen person funnet med epostadresse {0}", epostAdr));
             }
             catch (Exception ex)
             {
@@ -392,7 +392,7 @@ namespace NCoreClientSample
 
         public static void AvskrivJournalpostDirekte(IEphorteContext context, string avskrivningsmaate, int journalpostId)
         {
-            context.Functions.Execute("AvskrivJournalpostDirekte", new object[] { journalpostId, avskrivningsmaate, null });
+            context.Functions.Execute("AvskrivJournalpostDirekte", new object?[] { journalpostId, avskrivningsmaate, null });
         }
 
         public static void AvskrivOgAvsluttSak(IEphorteContext context, Sak sak)
@@ -411,7 +411,7 @@ namespace NCoreClientSample
         {
             try
             {
-                return context.Functions.Execute("GetVersionString").ToString();
+                return context.Functions.Execute("GetVersionString")?.ToString() ?? throw new Exception("GetVersionString returnerte ingen verdi");
             }
             catch (Exception ex)
             {
@@ -455,7 +455,10 @@ namespace NCoreClientSample
         {
             try
             {
-                return string.Format("{0}/{1}-{2}", sak.Saksaar.Value, sak.Sekvensnummer.Value, journalpost.Dokumentnummer);
+                if (sak.Saksaar is not int saksaar || sak.Sekvensnummer is not int sekvensnummer)
+                    throw new Exception(string.Format("Sak {0} mangler saksår eller sekvensnummer", sak.Id));
+
+                return string.Format("{0}/{1}-{2}", saksaar, sekvensnummer, journalpost.Dokumentnummer);
             }
             catch (Exception ex)
             {
@@ -470,25 +473,16 @@ namespace NCoreClientSample
                 logger.LogDebug($"Henter brukere fra epost '{godkjennereEpostListe}'...");
 
                 var emails = godkjennereEpostListe.Split(new char[] { ',',';' });
-                string approversUnitAndPersonId = string.Empty;
-                NCoreUser firstApprover = null;
-
-                int count = 1;
+                var approvers = new List<NCoreUser>();
 
                 foreach (var email in emails)
                 {
                     var person = HentPersonForEpostadresse(context, email);
-                    var approver = HentInfoOmBruker(context, person.Brukernavn);
-
-                    if (count == 1)
-                        firstApprover = approver;
-
-                    approversUnitAndPersonId += $"{approver.AdministrativEnhetId}:{approver.PersonnavnId};";
-
-                    count++;
+                    approvers.Add(HentInfoOmBruker(context, person.Brukernavn));
                 }
 
-                approversUnitAndPersonId = approversUnitAndPersonId.TrimEnd(';');
+                var firstApprover = approvers[0];
+                var approversUnitAndPersonId = string.Join(";", approvers.Select(a => $"{a.AdministrativEnhetId}:{a.PersonnavnId}"));
 
                 object functionResult = context.Functions.Execute("NewActivitiesFromTemplate",
                    new object[]
@@ -528,8 +522,8 @@ namespace NCoreClientSample
 
                 var templateData = context.Functions.Execute("GetDocTemplate", new object[] { template.Id, 0, "FILNAVN" });
                 var xmlDoc = new XmlDocument();
-                xmlDoc.LoadXml(templateData.ToString());
-                XmlNode fileData = xmlDoc.SelectSingleNode("//FileData");
+                xmlDoc.LoadXml(templateData?.ToString() ?? throw new Exception($"GetDocTemplate returnerte ingen data for dokumentmal '{malBetegnelse}'"));
+                XmlNode fileData = xmlDoc.SelectSingleNode("//FileData") ?? throw new Exception($"Dokumentmal '{malBetegnelse}' mangler FileData");
                 var file = fileData.SelectSingleNode("FileName")?.InnerText;
                 var fileType = fileData.SelectSingleNode("FileType")?.InnerText;
                 var base64Content = fileData.SelectSingleNode("ByteArray")?.InnerText;
@@ -537,7 +531,7 @@ namespace NCoreClientSample
                 if (string.IsNullOrEmpty(fileType))
                     fileType = template.Filetternavn;
 
-                return new FileData { TemplateFileName = Path.GetFileName(file), FileType = fileType, TemplateFileContentBase64 = base64Content };
+                return new FileData { TemplateFileName = Path.GetFileName(file) ?? string.Empty, FileType = fileType, TemplateFileContentBase64 = base64Content ?? string.Empty };
             }
             catch (Exception ex)
             {

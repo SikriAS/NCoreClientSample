@@ -43,7 +43,8 @@ namespace NCoreClientSample
 			#region Example: using the English namespace. I.e. Journalpost = RegistryEntry
 			using (var contextEN = nCoreFactory.Create(lang:NCoreClientLanguage.EN))
             {
-                var openedPostType = contextEN.Query<LogEvent>().Where(x => x.EventType == "Delivery Opened By Receiver").FirstOrDefault();
+                var openedPostType = contextEN.Query<LogEvent>().Where(x => x.EventType == "Delivery Opened By Receiver").FirstOrDefault()
+                    ?? throw new InvalidOperationException("LogEvent 'Delivery Opened By Receiver' not found");
                 int jpId = 5190;
 				var jpLogs = contextEN.Query<LogInfo>().Where(x => x.DatabaseTable == "JOURNPOST" && x.PrimaryKey0 == jpId.ToString() && x.EventType == openedPostType.Id).OrderByDescending(x => x.Id).ToList();
                 
@@ -67,7 +68,8 @@ namespace NCoreClientSample
                 var ncoreBruker = NCoreHelper.HentInfoOmBruker(context, person.Brukernavn);
 
                 #region Hent lese-/skrive logg
-                var saksbehandler = context.Query<Personnavn>().Where(x => x.Initialer == "INNY").FirstOrDefault();
+                var saksbehandler = context.Query<Personnavn>().Where(x => x.Initialer == "INNY").FirstOrDefault()
+                    ?? throw new InvalidOperationException("Personnavn med initialer 'INNY' finnes ikke");
                 var komplettLoggForSaksbehandler = context.Query<LoggInformasjon>().Where(x => x.RegistrertAvId == saksbehandler.Id.ToString()).OrderByDescending(x => x.Klokkeslett).ToList();
                 //var aktuelleTabeller = komplettLoggForSaksbehandler.DistinctBy(x => x.DatabaseTabell).Select(x => x.DatabaseTabell).ToList();
                 //var aktuellHogghendelseTyper = context.Query<LoggHendelse>().ToList();  
@@ -147,7 +149,8 @@ namespace NCoreClientSample
 
                     //Ordningsprinsipp FNS: Felles arkivnøkkel for statsforvaltingen
                     //Ordningsverdi ADM: Intern administrasjon
-                    var ordningsverdi = context.Query<Ordningsverdi>().Where(x => x.Tittel == "ADM" && x.OrdningsprinsippId == "FNS").FirstOrDefault();
+                    var ordningsverdi = context.Query<Ordningsverdi>().Where(x => x.Tittel == "ADM" && x.OrdningsprinsippId == "FNS").FirstOrDefault()
+                        ?? throw new InvalidOperationException("Ordningsverdi ADM i ordningsprinsipp FNS finnes ikke");
                     var primaerKlassering = new Klassering
                     {
                         OrdningsprinsippId = ordningsverdi.OrdningsprinsippId, //"FNS"

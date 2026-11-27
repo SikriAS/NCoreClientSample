@@ -25,7 +25,7 @@ namespace NCoreClientSample
         public NCoreFactory(ILogger<NCoreFactory> logger, IOptions<NCoreSettings> ncoreSettings)
         {
             _logger = logger;
-            NCoreSettings = ncoreSettings?.Value;
+            NCoreSettings = ncoreSettings.Value;
         }
 
         public IEphorteContext Create(NCoreClientLanguage lang = NCoreClientLanguage.NO)
